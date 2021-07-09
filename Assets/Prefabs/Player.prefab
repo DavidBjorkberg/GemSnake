@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6396938035012289857}
   - component: {fileID: 6396938035012289858}
+  - component: {fileID: 5852258757135350104}
   m_Layer: 0
   m_Name: Head
   m_TagString: Untagged
@@ -81,6 +82,18 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &5852258757135350104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6396938035012289856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adbc39733c5eee64a97be7582e44f598, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6396938035454271685
 GameObject:
   m_ObjectHideFlags: 0
@@ -90,7 +103,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6396938035454271686}
-  - component: {fileID: 5398254614950306483}
+  - component: {fileID: 7844122855064138010}
+  - component: {fileID: 1178004020891640333}
+  - component: {fileID: 6594000895626712568}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -113,7 +128,34 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5398254614950306483
+--- !u!114 &7844122855064138010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6396938035454271685}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7d63f852b50ced4f9f20ec1bf7b2068, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  head: {fileID: 5852258757135350104}
+  bodyPartPrefab: {fileID: 3140607982448487365, guid: efff4e42fc960364d8406eeb7be304d2,
+    type: 3}
+--- !u!114 &1178004020891640333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6396938035454271685}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a441aaf77a2b94ebc9c2229824dc63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6594000895626712568
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,4 +168,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   facingDir: 0
-  stepRate: 1
+  snakeBodyManager: {fileID: 7844122855064138010}

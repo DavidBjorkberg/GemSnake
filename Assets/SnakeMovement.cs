@@ -4,57 +4,91 @@ using UnityEngine;
 
 public class SnakeMovement : MonoBehaviour
 {
-    enum FacingDir { Up, Right, Down, Left };
-    [SerializeField] FacingDir facingDir;
-    [SerializeField] float stepRate;
-    int stepSize = 1;
-    float stepTimer;
+    GameplayStatics.Direction pendingDir;
+    [SerializeField] SnakeBodyManager snakeBodyManager;
+    BodyPart head;
 
-    private void Awake()
+    private void Start()
     {
-        stepTimer = stepRate;
-    }
-    void Start()
-    {
-
+        head = snakeBodyManager.GetHead();
     }
 
     void Update()
     {
         HandleMovementInput();
-        StepUpdate();
     }
-    void StepUpdate()
-    {
-        stepTimer -= Time.deltaTime;
 
-        if (stepTimer <= 0)
-        {
-            Step();
-            stepTimer = stepRate;
-        }
-    }
-    void Step()
+    public void MoveSnake(GridManager.CellInfo targetCell)
     {
-        switch (facingDir)
+        snakeBodyManager.MoveSnake(targetCell);
+    }
+    void HandleMovementInput()
+    {
+#if UNITY_IOS || UNITY_ANDROID
+        MobileInput(); 
+#else
+        DefaultInput();
+#endif
+    }
+    bool TrySetPendingDir(GameplayStatics.Direction newPendingDir)
+    {
+        GameplayStatics.Direction facingDir = head.GetDirection();
+        switch (newPendingDir)
         {
-            case FacingDir.Up:
-                transform.position += Vector3.up * stepSize;
+            case GameplayStatics.Direction.Up:
+                if (facingDir == GameplayStatics.Direction.Down)
+                {
+                    return false;
+                }
                 break;
-            case FacingDir.Right:
-                transform.position += Vector3.right * stepSize;
+            case GameplayStatics.Direction.Right:
+                if (facingDir == GameplayStatics.Direction.Left)
+                {
+                    return false;
+                }
                 break;
-            case FacingDir.Down:
-                transform.position += Vector3.down * stepSize;
+            case GameplayStatics.Direction.Down:
+                if (facingDir == GameplayStatics.Direction.Up)
+                {
+                    return false;
+                }
                 break;
-            case FacingDir.Left:
-                transform.position += Vector3.left * stepSize;
+            case GameplayStatics.Direction.Left:
+                if (facingDir == GameplayStatics.Direction.Right)
+                {
+                    return false;
+                }
                 break;
             default:
                 break;
         }
+        pendingDir = newPendingDir;
+        return true;
     }
-    void HandleMovementInput()
+    void DefaultInput()
+    {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            TrySetPendingDir(GameplayStatics.Direction.Up);
+        }
+        else if (Input.GetKeyDown(KeyCode.D))
+        {
+            TrySetPendingDir(GameplayStatics.Direction.Right);
+        }
+        else if (Input.GetKeyDown(KeyCode.S))
+        {
+            TrySetPendingDir(GameplayStatics.Direction.Down);
+        }
+        else if (Input.GetKeyDown(KeyCode.A))
+        {
+            TrySetPendingDir(GameplayStatics.Direction.Left);
+        }
+    }
+    public void ApplyDirectionChange()
+    {
+       head.SetDirection(pendingDir);
+    }
+    void MobileInput()
     {
         if (Input.touchCount > 0)
         {
@@ -74,59 +108,27 @@ public class SnakeMovement : MonoBehaviour
             {
                 if (deltaX > 0)
                 {
-                    TrySetFacingDir(FacingDir.Right);
+                    TrySetPendingDir(GameplayStatics.Direction.Right);
                 }
                 else
                 {
-                    TrySetFacingDir(FacingDir.Left);
+                    TrySetPendingDir(GameplayStatics.Direction.Left);
                 }
             }
             else
             {
                 if (deltaY > 0)
                 {
-                    TrySetFacingDir(FacingDir.Up);
+                    TrySetPendingDir(GameplayStatics.Direction.Up);
                 }
                 else
                 {
-                    TrySetFacingDir(FacingDir.Down);
+                    TrySetPendingDir(GameplayStatics.Direction.Down);
                 }
             }
 
         }
     }
-    bool TrySetFacingDir(FacingDir newFacingDir)
-    {
-        switch (newFacingDir)
-        {
-            case FacingDir.Up:
-                if (facingDir == FacingDir.Down)
-                {
-                    return false;
-                }
-                break;
-            case FacingDir.Right:
-                if (facingDir == FacingDir.Left)
-                {
-                    return false;
-                }
-                break;
-            case FacingDir.Down:
-                if (facingDir == FacingDir.Up)
-                {
-                    return false;
-                }
-                break;
-            case FacingDir.Left:
-                if (facingDir == FacingDir.Right)
-                {
-                    return false;
-                }
-                break;
-            default:
-                break;
-        }
-        facingDir = newFacingDir;
-        return true;
-    }
+
+
 }
