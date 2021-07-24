@@ -4,24 +4,30 @@ using UnityEngine;
 
 public class StepManager : MonoBehaviour
 {
-    [SerializeField] float mStepRate;
+    public static float STEP_RATE = 0.3f;
     GridManager mGridManager;
     GemManager mGemSpawnManager;
+    ComboManager mComboManager;
+    SnakeBodyManager mBodyManager;
     Player mPlayer;
     BodyPart mSnakeHead;
     SnakeMovement mSnakeMovement;
     float mStepTimer;
+    bool mPerformedComboLastStep;
+    List<BodyPart> mComboListLastStep;
     private void Awake()
     {
-        mStepTimer = mStepRate;
+        mStepTimer = STEP_RATE;
         mGridManager = GetComponent<GridManager>();
         mGemSpawnManager = GetComponent<GemManager>();
+        mComboManager = GetComponent<ComboManager>();
     }
     void Start()
     {
         mPlayer = GameManager.Instance.GetPlayer();
         mSnakeMovement = mPlayer.GetComponent<SnakeMovement>();
-        mSnakeHead = mPlayer.GetComponent<SnakeBodyManager>().GetHead();
+        mBodyManager = mPlayer.GetComponent<SnakeBodyManager>();
+        mSnakeHead = mBodyManager.GetHead();
     }
 
     void Update()
@@ -31,11 +37,30 @@ public class StepManager : MonoBehaviour
         if (mStepTimer <= 0)
         {
             Step();
-            mStepTimer = mStepRate;
+            mStepTimer = STEP_RATE;
         }
     }
     void Step()
     {
+        if (mPerformedComboLastStep)
+        {
+            mPerformedComboLastStep = false;
+            foreach (BodyPart bodyPart in mComboListLastStep)
+            {
+                mBodyManager.RemoveBodyPart(bodyPart);
+            }
+            foreach (BodyPart bodyPart in mComboListLastStep)
+            {
+                mComboManager.DestroyBodyPart(bodyPart);
+            }
+            List<BodyPart> allBodyParts = mBodyManager.GetAllBodyParts();
+            allBodyParts.RemoveAt(0);
+            foreach (BodyPart bodyPart in allBodyParts)
+            {
+                mGridManager.MoveEntity(bodyPart.GetCurCellIndex(), mGridManager.GetCellAtPos(bodyPart.transform.position).index);
+            }
+            return;
+        }
         mGemSpawnManager.Step();
         mSnakeMovement.ApplyDirectionChange();
 
@@ -46,11 +71,22 @@ public class StepManager : MonoBehaviour
         if (!GameManager.Instance.IsGameOver())
         {
             mSnakeMovement.MoveSnake(targetCell);
+            mComboManager.ComboCheck();
         }
     }
 
     GridManager.CellInfo GetTargetCell()
     {
         return mGridManager.GetCellAhead(mSnakeHead.GetCurCellIndex(), mSnakeHead.GetDirection());
+    }
+    public void PerformedCombo(List<BodyPart> comboList)
+    {
+        mPerformedComboLastStep = true;
+        mComboListLastStep = comboList;
+    }
+    //Only used for debug
+    public void ResetStepTimer()
+    {
+        mStepTimer = STEP_RATE;
     }
 }

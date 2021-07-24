@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get { return _instance; } }
     [SerializeField] Player mPlayer;
     [SerializeField] GridManager mGridManager;
+    StepManager mStepManager;
     GemManager mGemManager;
     bool mIsGameOver;
     private void Awake()
@@ -22,6 +23,7 @@ public class GameManager : MonoBehaviour
             _instance = this;
         }
         mGemManager = GetComponent<GemManager>();
+        mStepManager = GetComponent<StepManager>();
     }
     public Player GetPlayer()
     {
@@ -43,5 +45,9 @@ public class GameManager : MonoBehaviour
     {
         mIsGameOver = true;
         print("Ended game");
+    }
+    public StepManager GetStepManager()
+    {
+        return mStepManager;
     }
 }

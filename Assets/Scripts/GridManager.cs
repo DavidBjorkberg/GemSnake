@@ -16,36 +16,38 @@ public class GridManager : MonoBehaviour
             this.entity = null;
         }
     };
-    CellInfo[] grid;
-    [SerializeField] int gridWidth;
-    [SerializeField] int gridHeight;
-    [SerializeField] GameObject gridCellVisual;
-    [SerializeField] bool ShowCellVisual;
-    [SerializeField] Transform cellVisualParent;
-    Vector2 startPoint;
+    [SerializeField] int mGridWidth;
+    [SerializeField] int mGridHeight;
+    [SerializeField] GameObject mGridCellVisual;
+    [SerializeField] bool mShowCellVisual;
+    [SerializeField] Transform mCellVisualParent;
+    CellInfo[] mGrid;
+    List<GameObject> mVisualGrid = new List<GameObject>();
+    Vector2 mStartPoint;
     private void Awake()
     {
-        grid = new CellInfo[gridWidth * gridHeight];
-        float startPointX = -(float)gridWidth / 2 + 0.5f;
-        float startPointY = (float)gridHeight / 2 - 0.5f;
+        mGrid = new CellInfo[mGridWidth * mGridHeight];
+        float startPointX = -(float)mGridWidth / 2 + 0.5f;
+        float startPointY = (float)mGridHeight / 2 - 0.5f;
 
-        startPoint = new Vector2(startPointX, startPointY);
+        mStartPoint = new Vector2(startPointX, startPointY);
         InitializeGrid();
     }
     void InitializeGrid()
     {
         int cellIndex = 0;
-        for (int i = 0; i < gridHeight; i++)
+        for (int i = 0; i < mGridHeight; i++)
         {
-            for (int j = 0; j < gridWidth; j++)
+            for (int j = 0; j < mGridWidth; j++)
             {
-                Vector2 spawnPoint = startPoint + new Vector2Int(j, -i);
-                grid[cellIndex] = new CellInfo(spawnPoint, cellIndex);
+                Vector2 spawnPoint = mStartPoint + new Vector2Int(j, -i);
+                mGrid[cellIndex] = new CellInfo(spawnPoint, cellIndex);
                 cellIndex++;
-                if (ShowCellVisual)
+                if (mShowCellVisual)
                 {
-                    GameObject cellVisualGO = Instantiate(gridCellVisual, spawnPoint, Quaternion.identity);
-                    cellVisualGO.transform.SetParent(cellVisualParent);
+                    GameObject cellVisualGO = Instantiate(mGridCellVisual, spawnPoint, Quaternion.identity);
+                    cellVisualGO.transform.SetParent(mCellVisualParent);
+                    mVisualGrid.Add(cellVisualGO);
                 }
             }
         }
@@ -57,13 +59,13 @@ public class GridManager : MonoBehaviour
         switch (forwardDir)
         {
             case GameplayStatics.Direction.Up:
-                returnCellIndex += gridWidth;
+                returnCellIndex += mGridWidth;
                 break;
             case GameplayStatics.Direction.Right:
                 returnCellIndex--;
                 break;
             case GameplayStatics.Direction.Down:
-                returnCellIndex -= gridWidth;
+                returnCellIndex -= mGridWidth;
                 break;
             case GameplayStatics.Direction.Left:
                 returnCellIndex++;
@@ -71,7 +73,7 @@ public class GridManager : MonoBehaviour
             default:
                 break;
         }
-        return grid[returnCellIndex];
+        return mGrid[returnCellIndex];
     }
     public CellInfo GetCellAhead(int cellIndex, GameplayStatics.Direction forwardDir)
     {
@@ -80,13 +82,13 @@ public class GridManager : MonoBehaviour
         switch (forwardDir)
         {
             case GameplayStatics.Direction.Up:
-                returnCellIndex -= gridWidth;
+                returnCellIndex -= mGridWidth;
                 break;
             case GameplayStatics.Direction.Right:
                 returnCellIndex++;
                 break;
             case GameplayStatics.Direction.Down:
-                returnCellIndex += gridWidth;
+                returnCellIndex += mGridWidth;
                 break;
             case GameplayStatics.Direction.Left:
                 returnCellIndex--;
@@ -94,33 +96,52 @@ public class GridManager : MonoBehaviour
             default:
                 break;
         }
-        return grid[returnCellIndex];
+        return mGrid[returnCellIndex];
+    }
+    public ref CellInfo GetCellAtPos(Vector3 pos)
+    {
+        for (int i = 0; i < mGrid.Length; i++)
+        {
+            if (mGrid[i].pos.x - 0.5f <= pos.x &&
+                mGrid[i].pos.x + 0.5f >= pos.x &&
+                mGrid[i].pos.y - 0.5f <= pos.y &&
+                mGrid[i].pos.y + 0.5f >= pos.y)
+            {
+                return ref mGrid[i];
+            }
+        }
+        Debug.LogError("Couldn't find cell at Pos");
+        return ref mGrid[0];
     }
     public ref CellInfo GetCell(int index)
     {
-        return ref grid[index];
+        return ref mGrid[index];
     }
     public void AddEntityToCell(Entity entity, int index)
     {
-        grid[index].entity = entity;
+        mGrid[index].entity = entity;
     }
     public void MoveEntity(int startIndex, int targetIndex)
     {
-        CellInfo startcell = GetCell(startIndex);
-        CellInfo targetCell = GetCell(targetIndex);
+        if (startIndex == targetIndex)
+        {
+            return;
+        }
+        ref CellInfo startcell = ref GetCell(startIndex);
+        ref CellInfo targetCell = ref GetCell(targetIndex);
 
         if (startcell.entity == null)
         {
             Debug.LogError("Tried to move entity from cell that did not have an entity");
             return;
         }
-        grid[targetIndex].entity = grid[startIndex].entity;
-        grid[targetIndex].entity.SetCurCellIndex(grid[targetIndex].index);
-        grid[startIndex].entity = null;
+        targetCell.entity = startcell.entity;
+        targetCell.entity.SetCurCellIndex(targetCell.index);
+        startcell.entity = null;
     }
     public void SteppedOnCell(CellInfo cell)
     {
-        if (cell.entity != null)
+        if (cell.entity)
         {
             cell.entity.SteppedOn();
         }
@@ -143,14 +164,39 @@ public class GridManager : MonoBehaviour
         {
             returnDir = GameplayStatics.Direction.Left;
         }
-        else if (targetIndex == startIndex - gridWidth)
+        else if (targetIndex == startIndex - mGridWidth)
         {
             returnDir = GameplayStatics.Direction.Up;
         }
-        else if (targetIndex == startIndex + gridWidth)
+        else if (targetIndex == startIndex + mGridWidth)
         {
             returnDir = GameplayStatics.Direction.Down;
         }
         return returnDir;
     }
+    public CellInfo GetRandomFreeCell()
+    {
+        CellInfo randomCell;
+        do
+        {
+            int randomCellIndex = Random.Range(0, mGrid.Length);
+            randomCell = mGrid[randomCellIndex];
+
+        } while (randomCell.entity);
+
+        return randomCell;
+    }
+    public int GetGridWidth()
+    {
+        return mGridWidth;
+    }
+    public int GetGridHeight()
+    {
+        return mGridHeight;
+    }
+    public List<GameObject> GetVisualGrid()
+    {
+        return mVisualGrid;
+    }
+
 }

@@ -4,24 +4,48 @@ using UnityEngine;
 
 public class BodyPart : Entity
 {
-    BodyPart prevPart;
-    BodyPart nextPart;
-    GameplayStatics.Direction direction;
+    BodyPart mPrevPart;
+    BodyPart mNextPart;
+    GameplayStatics.Direction mDirection;
+    GemManager.GemType mGemType;
     public void SetNextBodyPart(BodyPart newNext)
     {
-        nextPart = newNext;
+        mNextPart = newNext;
     }
     public BodyPart GetNextBodyPart()
     {
-        return nextPart;
+        return mNextPart;
     }
     public void SetPreviousBodyPart(BodyPart newPrev)
     {
-        prevPart = newPrev;
+        mPrevPart = newPrev;
     }
     public BodyPart GetPreviousBodyPart()
     {
-        return prevPart;
+        return mPrevPart;
+    }
+    public IEnumerator MoveToNextCell(int nrOfStepsToMove)
+    {
+        GridManager gridManager = GameManager.Instance.GetGridManager();
+        BodyPart targetBodyPart = mNextPart;
+
+        for (int i = 0; i < nrOfStepsToMove; i++)
+        {
+            GridManager.CellInfo startCell = gridManager.GetCell(targetBodyPart.GetPreviousBodyPart().GetCurCellIndex());
+            GridManager.CellInfo targetCell = gridManager.GetCell(targetBodyPart.GetCurCellIndex());
+            Vector3 startPos = startCell.pos;
+            Vector3 targetPos = targetCell.pos;
+            float lerpValue = 0;
+
+            while (lerpValue < 1)
+            {
+                transform.position = Vector3.Lerp(startPos, targetPos, lerpValue);
+                lerpValue += Time.deltaTime / StepManager.STEP_RATE * nrOfStepsToMove;
+                yield return new WaitForEndOfFrame();
+            }
+            targetBodyPart = targetBodyPart.GetNextBodyPart();
+        }
+
     }
 
     public override void SteppedOn()
@@ -30,10 +54,18 @@ public class BodyPart : Entity
     }
     public void SetDirection(GameplayStatics.Direction newDir)
     {
-        direction = newDir;
+        mDirection = newDir;
     }
     public GameplayStatics.Direction GetDirection()
     {
-        return direction;
+        return mDirection;
+    }
+    public void SetGemType(GemManager.GemType gemType)
+    {
+        mGemType = gemType;
+    }
+    public override GemManager.GemType GetGemType()
+    {
+        return mGemType;
     }
 }
